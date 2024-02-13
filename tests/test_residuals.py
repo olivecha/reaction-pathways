@@ -7,5 +7,6 @@ import unittest
 class TestResidual(unittest.TestCase):
 
     def test_conservation(self):
-        RPA = np.ones((3, 3))
-        self.assertAlmostEqual(RPA[0, 0], 1.)
+        RPA = np.eye(10)
+        for line in RPA:
+            self.assertAlmostEqual(np.sum(line), 1.)
