@@ -4,6 +4,7 @@ Reaction Path Analysis for Cantera Flames
 import graphviz
 import cantera as ct
 import numpy as np
+from itertools import product
 
 def format_value(value, line_width):
     """
@@ -110,3 +111,102 @@ def visualize_reaction_graph(flame, element,
             if width > tol:
                 f.edge(spr, spp, label=label, penwidth=str(width), color=color)
     return f
+
+
+
+
+def e_transfer_matrix(gas, element):
+    """
+    Determine the number of atoms of element "e" transfered from species 1 to species 2
+    through the reaction i
+    
+    Output is n_i(e,sp1,sp2). See:
+    Joseph F. Grcar , Marcus S. Day & John B. Bell (2006) A taxonomy of integral reaction path analysis,
+    Combustion Theory and Modelling, 10:4, 559-579, DOI: 10.1080/13647830600551917
+    """
+
+    for irx, reaction in enumerate(gas.reactions()):
+        if np.any([gas.n_atoms(reac,element) for reac in reaction.reactants]):
+
+            # Generate all possible and valid combinations of atom transfer
+            combinations, dlt_sp_cmp, dlt_W = generate_valid_combinations(reaction,element)
+            
+            # minimize change in species composition (element count)
+            if combinations.shape[0]-1:
+                combinations = combinations[(np.multiply(combinations,dlt_sp_cmp).sum(axis = 1).min() == np.multiply(combinations,dlt_sp_cmp).sum(axis = 1))]
+            
+            # favour carbon atom over oxygen atom transfer
+            if combinations.shape[0]-1 and  'O' in gas.element_names and 'C' in gas.element_names and (element == 'O' or element == 'C'):
+                comb_fltr = np.zeros((np.shape(combinations)[0],1), dtype=bool)
+            
+                element_2 = 'C' if element == 'O' else 'O'
+                
+                combinations_2  = generate_valid_combinations(reaction,element_2)[0]
+            
+                for i in range(np.shape(combinations)[0]):
+                    for j in range(np.shape(combinations_2)[0]):
+                        if element == 'O':
+                            if ((combinations_2[j] >= combinations[i]) & (combinations[i] > 0)).any():
+                                comb_fltr[i] = True        
+                        
+                        else:
+                            if ((combinations[i] >= combinations_2[j]) & (combinations_2[j] > 0)).any():
+                                comb_fltr[i] = True        
+                    
+                combinations = combinations[comb_fltr]    
+            
+            # minimize change in molar mass
+            if combinations.shape[0]-1:
+                combinations = combinations[(np.multiply(combinations,dlt_W).sum(axis = 1).min() == np.multiply(combinations,dlt_W).sum(axis = 1))]
+
+            # minimize split        
+            if combinations.shape[0]-1:
+                combinations = combinations[(combinations > 0).sum(axis = 1).min() == (combinations > 0).sum(axis = 1)]
+         
+            
+        #print(reaction)
+        ##print(irx)
+        #display(combinations)
+        
+    
+def generate_valid_combinations(reaction,element):
+
+    fct_lvls    = []
+    fct_lvls_v  = []
+    dlt_sp_cmp  = []
+    dlt_W       = []
+    dlt_bd      = []
+    
+    n_e = 0
+    for reac in reaction.reactants: #for j=1:size(Reac_RR_n,2)
+        n_e +=  gas.n_atoms(reac,element) * reaction.reactants[reac] 
+        for prod in reaction.products: #for k=1:size(Prod_RR_n,2)
+            
+            fct_lvls_v = np.append(fct_lvls_v, [reaction.reactants[reac],reaction.products[prod]][np.argmin(([gas.n_atoms(reac,element) * reaction.reactants[reac],gas.n_atoms(prod,element) * reaction.products[prod]]))])
+            fct_lvls   = np.append(fct_lvls,   [gas.n_atoms(reac,element),gas.n_atoms(prod,element)][np.argmin(([gas.n_atoms(reac,element) * reaction.reactants[reac],gas.n_atoms(prod,element) * reaction.products[prod]]))])
+            
+            dlt_sp_cmp = np.append(dlt_sp_cmp, np.abs([gas.n_atoms(reac,elem)-gas.n_atoms(prod,elem) for elem in gas.element_names]).sum())
+            dlt_W      = np.append(dlt_W     , abs(gas.molecular_weights[gas.species_index(reac)]-gas.molecular_weights[gas.species_index(prod)]))
+            dlt_bd     = np.append(dlt_bd    , abs(gas.molecular_weights[gas.species_index(reac)]-gas.molecular_weights[gas.species_index(prod)]))
+    
+    
+    fct_lvls = fct_lvls.astype(np.int64)
+
+    # Generate all possible combinations
+    combinations = np.multiply(np.array(list(product(*[range(level + 1) for level in fct_lvls]))),fct_lvls_v)
+
+    # check that the total number of exchanged atom matches the total number of atoms in the reactants (and hence products)
+    if combinations.shape[0]-1:
+        combinations = combinations[combinations.sum(axis = 1) == n_e]
+
+    # Check for:
+    #           1) a given reactant that the total number of atoms given matches its elemental composition
+    #           2) a given product that the total number of atoms received matches its elemental composition
+    
+    if combinations.shape[0]-1:
+        combinations = combinations[[np.all([abs(np.sum(np.reshape(combinations[iC],(len(reaction.reactants),len(reaction.products))),axis = 1) - [gas.n_atoms(reac,element) * reaction.reactants[reac] for reac in reaction.reactants]).sum() < RES,abs(np.sum(np.reshape(combinations[iC],(len(reaction.reactants),len(reaction.products))),axis = 0) - [gas.n_atoms(prod,element) * reaction.products[prod] for prod in reaction.products]).sum() < RES]) for iC in range(np.shape(combinations)[0])]]
+    
+    return combinations, dlt_sp_cmp, dlt_W    
+    
+    
+
