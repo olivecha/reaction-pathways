@@ -64,12 +64,14 @@ def compute_reaction_graph(flame, element):
                         # Cantera index of reactant
                         ct_index = flame.gas.species_index(ri)
                         # Number of atoms of element
+                        # PV 2024.02.20 - Implement n_e here
                         ni = ct_species[ct_index].composition[element]
                         # Reactant has a flow of n_ele * net_rate
                         # Towards the product
                         graph[idx_r, idx_p] += rk * ni
     
     # Remove reverse direction
+    # PV 2024.02.20: to double check (reverse should be kept and simply considered as reverse. Confirm this is how Cantera treats net RR)
     graph = graph - graph.T
     graph[graph < 0] = 0
     # Normalize
