@@ -27,6 +27,43 @@ def compute_reaction_graph(flame, element):
     Compute the reaction graph between species
     containing {element} in {flame}
     """
+    # Get the relevant species names (special case for H and HE)
+    # Before 2024.02.20 : species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
+    species = [sp.name for sp in ct_species if gas.n_atoms(sp.name,element)]
+
+    species_idx = [gas.species_index(sp) for sp in species]
+
+    graph = np.zeros((len(species), len(species)))
+        
+    ne_s1s2 = e_transfer_matrix(flame.gas, element)
+    
+    ne_rate = np.zeros((len(species),len(species),len(flame.grid))
+    
+    
+    for irx in range(0,np.shape(ne_s1s2)[0]):
+        idx_r = np.where(species == ne_s1_s2[irx,1])[0]
+        idx_p = np.where(species == ne_s1_s2[irx,2])[0]
+        ne_rate[idx_r,idx_p,:] += ne_s1_s2[irx,3]*flame.net_rates_of_progress[ne_s1_s2[irx,0]]
+    
+    for idx_r in range(np.shape(ne_rate)[0]):
+        for idx_p in range(np.shape(ne_rate)[1]):
+            graph[idx_r,idx_p] = Simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid):        
+    
+    
+
+    
+    # Put rates in new forward (positive) direction
+    graph = graph - graph.T
+    graph[graph < 0] = 0
+    # Normalize
+    graph /= np.max(graph)
+    # For plotting
+    return species, np.around(graph, 3)
+    
+    
+    
+    
+    """
     # Integrate the reaction rates
     int_NRR = {}
     for i, rate  in enumerate(flame.net_rates_of_progress):
@@ -71,13 +108,13 @@ def compute_reaction_graph(flame, element):
                         graph[idx_r, idx_p] += rk * ni
     
     # Remove reverse direction
-    # PV 2024.02.20: to double check (reverse should be kept and simply considered as reverse. Confirm this is how Cantera treats net RR)
+    # PV 2024.02.20: to double check - C'est bon!
     graph = graph - graph.T
     graph[graph < 0] = 0
     # Normalize
     graph /= np.max(graph)
     # For plotting
-    return species, np.around(graph, 3)
+    return species, np.around(graph, 3)"""
 
 
 def visualize_reaction_graph(flame, element, 
