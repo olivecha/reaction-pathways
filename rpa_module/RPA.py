@@ -36,7 +36,7 @@ def compute_reaction_graph(flame, element):
     ct_species = flame.gas.species()
     # Get the relevant species names (special case for H and HE)
     # Before 2024.02.20 : species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
-   species = [sp.name for sp in ct_species if gas.n_atoms(sp.name,element)]
+    species = [sp.name for sp in ct_species if gas.n_atoms(sp.name,element)]
     
     # Reindex with the species of interest
     species_indexes = {sp:i for i, sp in enumerate(species)}
@@ -128,10 +128,11 @@ def e_transfer_matrix(gas, element):
     Joseph F. Grcar , Marcus S. Day & John B. Bell (2006) A taxonomy of integral reaction path analysis,
     Combustion Theory and Modelling, 10:4, 559-579, DOI: 10.1080/13647830600551917
     """
-
+    n_e_s1_s2 = np.empty((0, 4))
+    
     for irx, reaction in enumerate(gas.reactions()):
         if np.any([gas.n_atoms(reac,element) for reac in reaction.reactants]):
-
+    
             # Generate all possible and valid combinations of atom transfer
             combinations, dlt_sp_cmp, dlt_W = generate_valid_combinations(reaction,element)
             
@@ -162,16 +163,24 @@ def e_transfer_matrix(gas, element):
             # minimize change in molar mass
             if combinations.shape[0]-1:
                 combinations = combinations[(np.multiply(combinations,dlt_W).sum(axis = 1).min() == np.multiply(combinations,dlt_W).sum(axis = 1))]
-
+    
             # minimize split        
             if combinations.shape[0]-1:
                 combinations = combinations[(combinations > 0).sum(axis = 1).min() == (combinations > 0).sum(axis = 1)]
+    
          
+            if combinations.shape[0]-1:
+            #****Output warning
+                combinations = combinations[0]
             
-        #print(reaction)
-        ##print(irx)
-        #display(combinations)
-        
+            
+            ic = 0
+            for reac in reaction.reactants:
+                for prod in reaction.products: #for k=1:size(Prod_RR_n,2)
+                    if combinations[0][ic]:
+                        n_e_s1_s2 = np.vstack((n_e,[irx, gas.species_index(reac), gas.species_index(prod), combinations[0][ic]]))
+                    ic += 1
+            return n_e_s1_s2
     
 def generate_valid_combinations(reaction,element):
 
