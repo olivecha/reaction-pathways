@@ -35,7 +35,9 @@ def compute_reaction_graph(flame, element):
     # Construct the graph
     ct_species = flame.gas.species()
     # Get the relevant species names (special case for H and HE)
-    species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
+    # Before 2024.02.20 : species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
+   species = [sp.name for sp in ct_species if gas.n_atoms(sp.name,element)]
+    
     # Reindex with the species of interest
     species_indexes = {sp:i for i, sp in enumerate(species)}
     # Empty graph
