@@ -61,6 +61,10 @@ def compute_reaction_graph(flame, element):
     for i_sp, sp_name in enumerate(species):
         Flux_net[i_sp] = Simpson_13_comp(flame.net_production_rates[species_idx[i_sp]], flame.grid)*gas.n_atoms(species_idx[i_sp],element)
     
+    
+    if (abs((graph.sum(axis = 1) - graph.sum(axis = 0) + Flux_net)/abs(graph).max()) > 1e-6).any():
+        raise ValueError("Imbalance in atom flux detected")    
+    
     Flux_in = np.maximum(np.zeros(np.shape(Flux_net)), -Flux_net)
     Flux_out = np.reshape(np.append(np.maximum(np.zeros(np.shape(Flux_net)), Flux_net),[0,0]),(len(Flux_net)+2,1))
     
