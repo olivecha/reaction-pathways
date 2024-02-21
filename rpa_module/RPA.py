@@ -9,7 +9,7 @@ def format_value(value, line_width):
     """
     value *= (100/line_width)
     if value > 1.0:
-        label = f"{value:.2f}%"
+        label = f"{value:.0f}%"
     elif value > 0.1:
         label = f"{value:.2f}%"
     elif value > 0.01:
@@ -51,9 +51,6 @@ def compute_reaction_graph(flame, element):
             graph[idx_r,idx_p] = Simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid)
             #graph[idx_r,idx_p] = np.trapz(ne_rate[idx_r,idx_p,:], flame.grid)
     
-    
-
-
     ## in/out fluxes
 
     Flux_net = np.zeros((len(species),))
@@ -61,12 +58,15 @@ def compute_reaction_graph(flame, element):
     for i_sp, sp_name in enumerate(species):
         Flux_net[i_sp] = Simpson_13_comp(flame.net_production_rates[species_idx[i_sp]], flame.grid)*gas.n_atoms(species_idx[i_sp],element)
     
-    
-    if (abs((graph.sum(axis = 1) - graph.sum(axis = 0) + Flux_net)/abs(graph).max()) > 1e-6).any():
-        raise ValueError("Imbalance in atom flux detected")    
-    
     Flux_in = np.maximum(np.zeros(np.shape(Flux_net)), -Flux_net)
     Flux_out = np.reshape(np.append(np.maximum(np.zeros(np.shape(Flux_net)), Flux_net),[0,0]),(len(Flux_net)+2,1))
+
+    
+    residuals = abs((graph.sum(axis = 1) - graph.sum(axis = 0) + Flux_net)/Flux_in.sum())
+    print("Maximum atom flux imbalance is {:.2e}%".format(residuals.max()*100))
+
+    if residuals.max() > 1e-9:
+        raise ValueError("Imbalance in atom flux detected")    
     
 
     graph = np.vstack((graph,Flux_in))
@@ -86,7 +86,8 @@ def compute_reaction_graph(flame, element):
     # add balance check
     
     # Normalize
-    graph /= np.max(graph)
+    graph /= Flux_in.sum()
+    #graph /= np.max(graph)
     # For plotting
     return species, graph
     
@@ -256,6 +257,8 @@ def generate_valid_combinations(reaction,element):
     dlt_sp_cmp  = []
     dlt_W       = []
     dlt_bd      = []
+    
+    RES = 1e-9
     
     n_e = 0
     for reac in reaction.reactants: #for j=1:size(Reac_RR_n,2)
