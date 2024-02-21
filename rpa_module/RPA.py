@@ -79,7 +79,7 @@ def compute_reaction_graph(flame, element):
     graph = graph - graph.T
     graph[graph < 0] = 0
     
-    
+    # add balance check
     
     # Normalize
     graph /= np.max(graph)
