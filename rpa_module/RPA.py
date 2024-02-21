@@ -29,28 +29,29 @@ def compute_reaction_graph(flame, element):
     """
     # Get the relevant species names (special case for H and HE)
     # Before 2024.02.20 : species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
-    species = [sp.name for sp in ct_species if gas.n_atoms(sp.name,element)]
-
+    species = [sp.name for sp in gas.species() if gas.n_atoms(sp.name,element)]
+    
     species_idx = [gas.species_index(sp) for sp in species]
-
+    
     graph = np.zeros((len(species), len(species)))
         
     ne_s1s2 = e_transfer_matrix(flame.gas, element)
     
-    ne_rate = np.zeros((len(species),len(species),len(flame.grid))
+    ne_rate = np.zeros((len(species),len(species),len(flame.grid)))
     
     
     for irx in range(0,np.shape(ne_s1s2)[0]):
-        idx_r = np.where(species == ne_s1_s2[irx,1])[0]
-        idx_p = np.where(species == ne_s1_s2[irx,2])[0]
-        ne_rate[idx_r,idx_p,:] += ne_s1_s2[irx,3]*flame.net_rates_of_progress[ne_s1_s2[irx,0]]
+        idx_r = np.where(species_idx == ne_s1s2[irx,1])[0]
+        idx_p = np.where(species_idx == ne_s1s2[irx,2])[0]
+    
+        ne_rate[idx_r,idx_p,:] += ne_s1s2[irx,3]*flame.net_rates_of_progress[ne_s1s2[irx,0].astype(int)]
     
     for idx_r in range(np.shape(ne_rate)[0]):
         for idx_p in range(np.shape(ne_rate)[1]):
-            graph[idx_r,idx_p] = Simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid):        
+            graph[idx_r,idx_p] = Simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid)        
     
     
-
+    
     
     # Put rates in new forward (positive) direction
     graph = graph - graph.T
@@ -165,7 +166,7 @@ def e_transfer_matrix(gas, element):
     Joseph F. Grcar , Marcus S. Day & John B. Bell (2006) A taxonomy of integral reaction path analysis,
     Combustion Theory and Modelling, 10:4, 559-579, DOI: 10.1080/13647830600551917
     """
-    n_e_s1_s2 = np.empty((0, 4))
+    ne_s1s2 = np.empty((0, 4))
     
     for irx, reaction in enumerate(gas.reactions()):
         if np.any([gas.n_atoms(reac,element) for reac in reaction.reactants]):
@@ -215,9 +216,9 @@ def e_transfer_matrix(gas, element):
             for reac in reaction.reactants:
                 for prod in reaction.products: #for k=1:size(Prod_RR_n,2)
                     if combinations[0][ic]:
-                        n_e_s1_s2 = np.vstack((n_e,[irx, gas.species_index(reac), gas.species_index(prod), combinations[0][ic]]))
+                        ne_s1s2 = np.vstack((ne_s1s2,[irx, gas.species_index(reac), gas.species_index(prod), combinations[0][ic]]))
                     ic += 1
-            return n_e_s1_s2
+    return ne_s1s2
     
 def generate_valid_combinations(reaction,element):
 
