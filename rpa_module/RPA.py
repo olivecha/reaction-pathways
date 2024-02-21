@@ -28,7 +28,7 @@ def compute_reaction_graph(flame, element):
     ix_out = len(flame.grid)
     
     # Get the relevant species names (special case for H and HE)
-    # Before 2024.02.20 : species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
+    
     species = [sp.name for sp in gas.species() if gas.n_atoms(sp.name,element)]
     
     species_idx = [gas.species_index(sp) for sp in species]
@@ -90,62 +90,6 @@ def compute_reaction_graph(flame, element):
     #graph /= np.max(graph)
     # For plotting
     return species, graph
-    
-    
-    
-    
-    """
-    # Integrate the reaction rates
-    int_NRR = {}
-    for i, rate  in enumerate(flame.net_rates_of_progress):
-        int_NRR[f'R{i}'] = np.trapz(rate, flame.grid)
-
-    # Construct the graph
-    ct_species = flame.gas.species()
-    # Get the relevant species names (special case for H and HE)
-    # Before 2024.02.20 : species = [sp.name for sp in ct_species if (element in sp.name) and (sp.name != 'HE')]
-    species = [sp.name for sp in ct_species if gas.n_atoms(sp.name,element)]
-    
-    # Reindex with the species of interest
-    species_indexes = {sp:i for i, sp in enumerate(species)}
-    # Empty graph
-    graph = np.zeros((len(species), len(species)))
-    # All reactions
-    ct_reactions = flame.gas.reactions()
-    # For each reaction
-    for i, rkey in enumerate(int_NRR):
-        reaction = ct_reactions[i]
-        # For each reactant
-        for ri in reaction.reactants:
-            # If the reactant contains element
-            if ri in species:
-                # For each product
-                for rj in reaction.products:
-                    # If the product contains element
-                    if rj in species:
-                        # Reactant species index
-                        idx_r = species_indexes[ri]
-                        # Product species index
-                        idx_p = species_indexes[rj]
-                        # Integrated net reaction rate
-                        rk = int_NRR[rkey]
-                        # Cantera index of reactant
-                        ct_index = flame.gas.species_index(ri)
-                        # Number of atoms of element
-                        # PV 2024.02.20 - Implement n_e here
-                        ni = ct_species[ct_index].composition[element]
-                        # Reactant has a flow of n_ele * net_rate
-                        # Towards the product
-                        graph[idx_r, idx_p] += rk * ni
-    
-    # Remove reverse direction
-    # PV 2024.02.20: to double check - C'est bon!
-    graph = graph - graph.T
-    graph[graph < 0] = 0
-    # Normalize
-    graph /= np.max(graph)
-    # For plotting
-    return species, np.around(graph, 3)"""
 
 
 def visualize_reaction_graph(flame, element, 
