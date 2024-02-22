@@ -3,7 +3,7 @@ import graphviz
 import cantera as ct
 import numpy as np
 from utils import format_value
-from integration import Simpson_13, Simpson_13_comp
+from integration import simpson_13, simpson_13_comp
 
 def compute_reaction_graph(flame, element):
     """
@@ -34,7 +34,7 @@ def compute_reaction_graph(flame, element):
     
     for idx_r in range(np.shape(ne_rate)[0]):
         for idx_p in range(np.shape(ne_rate)[1]):
-            graph[idx_r,idx_p] = Simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid)
+            graph[idx_r,idx_p] = simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid)
             #graph[idx_r,idx_p] = np.trapz(ne_rate[idx_r,idx_p,:], flame.grid)
     
     ## in/out fluxes
@@ -42,7 +42,7 @@ def compute_reaction_graph(flame, element):
     Flux_net = np.zeros((len(species),))
     
     for i_sp, sp_name in enumerate(species):
-        Flux_net[i_sp] = Simpson_13_comp(flame.net_production_rates[species_idx[i_sp]], flame.grid)*gas.n_atoms(species_idx[i_sp],element)
+        Flux_net[i_sp] = simpson_13_comp(flame.net_production_rates[species_idx[i_sp]], flame.grid)*gas.n_atoms(species_idx[i_sp],element)
     
     Flux_in = np.maximum(np.zeros(np.shape(Flux_net)), -Flux_net)
     Flux_out = np.reshape(np.append(np.maximum(np.zeros(np.shape(Flux_net)), Flux_net),[0,0]),(len(Flux_net)+2,1))

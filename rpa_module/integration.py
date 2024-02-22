@@ -1,5 +1,5 @@
 
-def Simpson_13(fx,x):
+def simpson_13(fx,x):
     """
     Simpson's 1/3 integration for a 3-point irregular grid
 
@@ -31,7 +31,7 @@ def Simpson_13(fx,x):
     return Int
 
 
-def Simpson_13_comp(fx, x):
+def simpson_13_comp(fx, x):
     """
     Composite Simpson's 1/3 integration on an irregular grid of arbitrary length
 
