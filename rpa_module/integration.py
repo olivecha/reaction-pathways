@@ -1,20 +1,26 @@
+"""
+Integration Functions
+"""
 
-def simpson_13(fx,x):
+
+def simpson_13(fx, x):
     """
     Simpson's 1/3 integration for a 3-point irregular grid
 
     Parameters:
-    - x: grid points
+    - x: grid points {array of len(3)}
     - fx: function evaluated at each grid point
 
     Returns:
     - Integral estimate using Simpson's 1/3 rule.
 
 
-    Reference: P. Versailles, CH formation in Premixed Flames of C1–C4 Alkanes: Assessment of Current Chemical
-               Modelling Capability Against Experiments, McGill University, 2017 Ph.D. thesis. http://digitool.library.mcgill.ca/R/
+    Reference: P. Versailles, CH formation in Premixed Flames of C1–C4 Alkanes: 
+               Assessment of Current Chemical Modelling Capability Against 
+               Experiments, McGill University, 2017 Ph.D. thesis. 
+               http://digitool.library.mcgill.ca/R/
     """
-    if len(x) != 3 or len(fx) != 3:
+    if (len(x) != 3 or len(fx) != 3):
         raise ValueError("x and fx must be 1x3 or 3x1 matrices")
     
     
@@ -33,7 +39,8 @@ def simpson_13(fx,x):
 
 def simpson_13_comp(fx, x):
     """
-    Composite Simpson's 1/3 integration on an irregular grid of arbitrary length
+    Composite Simpson's 1/3 integration on an irregular grid 
+    of arbitrary length
 
     Parameters:
     - x: grid points
@@ -42,9 +49,10 @@ def simpson_13_comp(fx, x):
     Returns:
     - Integral estimate using composite Simpson's 1/3 rule.
 
-
-    Reference: P. Versailles, CH formation in Premixed Flames of C1–C4 Alkanes: Assessment of Current Chemical
-               Modelling Capability Against Experiments, McGill University, 2017 Ph.D. thesis. http://digitool.library.mcgill.ca/R/
+    Reference: P. Versailles, CH formation in Premixed Flames of C1–C4 Alkanes: 
+               Assessment of Current Chemical Modelling Capability Against 
+               Experiments, McGill University, 2017 Ph.D. thesis. 
+               http://digitool.library.mcgill.ca/R/
     """
 
     
@@ -74,7 +82,7 @@ def simpson_13_comp(fx, x):
     
     # Apply Simpson's 1/3 rule to each interval
     for i in range(nb_Intint):
-        Int += Simpson_13(fx[2*i:2*i+3], x[2*i:2*i+3])
+        Int += simpson_13(fx[2*i:2*i+3], x[2*i:2*i+3])
         
     
     # Handle the last interval if the number of 3-gridpoint intervals is not a round number
