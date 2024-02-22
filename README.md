@@ -1,6 +1,14 @@
 # reaction-pathways
 Reaction Pathway Analysis for multidimensional reacting flows
 
+## Installation
+```
+pip install -r requirements.txt
+```
 
-2023.02.12: 1st commit by O.Chabot
-2024.02.02 - AM: Push of atom transfer matrix script by P.Versailles 
+## Tests
+Assuming the pytest module is installed:
+```bash
+cd reaction-pathways
+pytest
+```
