@@ -6,22 +6,6 @@ import cantera as ct
 import numpy as np
 from itertools import product
 
-def format_value(value, line_width):
-    """
-    Format normalized reaction rate value
-    """
-    value *= (100/line_width)
-    if value > 1.0:
-        label = f"{value:.0f}%"
-    elif value > 0.1:
-        label = f"{value:.2f}%"
-    elif value > 0.01:
-        label = f"{value:.3f}%"
-    else:
-        label = f"{value:.0e}%"
-    return label
-
-
 def compute_reaction_graph(flame, element):
     """
     Compute the reaction graph between species
