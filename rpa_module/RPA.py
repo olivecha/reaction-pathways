@@ -1,22 +1,26 @@
+# python libs
 from itertools import product
+# Installed packages
 import graphviz
 import cantera as ct
 import numpy as np
+from scipy.interpolate import simpson
+# Imported from this module
 from utils import format_value
-from integration import simpson_13, simpson_13_comp
 
 def compute_reaction_graph(flame, element):
     """
     Compute the reaction graph between species
     containing {element} in {flame}
     """
+    # What does this do ?
     ix_in = 0
     ix_out = len(flame.grid)
     
-    # Get the relevant species names (special case for H and HE)
+    # Get the names of species containing element
+    species = [sp.name for sp in gas.species() if gas.n_atoms(sp.name, element)]
     
-    species = [sp.name for sp in gas.species() if gas.n_atoms(sp.name,element)]
-    
+    # Get the index of the species from the gas instance
     species_idx = [gas.species_index(sp) for sp in species]
     
     graph = np.zeros((len(species), len(species)))
@@ -34,7 +38,7 @@ def compute_reaction_graph(flame, element):
     
     for idx_r in range(np.shape(ne_rate)[0]):
         for idx_p in range(np.shape(ne_rate)[1]):
-            graph[idx_r,idx_p] = simpson_13_comp(ne_rate[idx_r,idx_p,:], flame.grid)
+            graph[idx_r,idx_p] = simpson(ne_rate[idx_r,idx_p,:], flame.grid)
             #graph[idx_r,idx_p] = np.trapz(ne_rate[idx_r,idx_p,:], flame.grid)
     
     ## in/out fluxes
@@ -42,7 +46,7 @@ def compute_reaction_graph(flame, element):
     Flux_net = np.zeros((len(species),))
     
     for i_sp, sp_name in enumerate(species):
-        Flux_net[i_sp] = simpson_13_comp(flame.net_production_rates[species_idx[i_sp]], flame.grid)*gas.n_atoms(species_idx[i_sp],element)
+        Flux_net[i_sp] = simpson(flame.net_production_rates[species_idx[i_sp]], flame.grid)*gas.n_atoms(species_idx[i_sp],element)
     
     Flux_in = np.maximum(np.zeros(np.shape(Flux_net)), -Flux_net)
     Flux_out = np.reshape(np.append(np.maximum(np.zeros(np.shape(Flux_net)), Flux_net),[0,0]),(len(Flux_net)+2,1))
