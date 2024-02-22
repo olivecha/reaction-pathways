@@ -1,5 +1,5 @@
 
-def format_value(value, line_width):
+def format_value(value, max_width):
     """
     Format normalized reaction rate value
     
@@ -7,21 +7,27 @@ def format_value(value, line_width):
     and format it into a string to label a graph
     edge according to its value
     """
-    # Convert to %
-    value *= (100/line_width)
+    # This would not work
+    if value > max_width:
+        raise ValueError(f"edge value {value}  is more"
+                          " than the maximum value used"
+                          " ({max_width}), so normalization"
+                          " wont work here as the"
+                          " percentage will be > 100%")
+    # Normalize and convert to %
+    value *= (100/max_width)
     # No decimals
-    if value > 1.0:
+    if value > 10:
         label = f"{value:.0f}%"
     # One decimal
+    elif value > 1:
+        label = f"{value:.1f}%"
+    # Two decimal
     elif value > 0.1:
         label = f"{value:.2f}%"
-    # Two decimal
-    elif value > 0.01:
-        label = f"{value:.3f}%"
-    # Scientific notation with no
-    # decimals
+    # Scientific notation with no decimals
     else:
-        label = f"{value:.0e}%"
+        label = f"{value:.1e}%"
     return label
 
 
