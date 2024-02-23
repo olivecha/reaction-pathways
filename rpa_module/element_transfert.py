@@ -1,6 +1,7 @@
 from itertools import product
 import cantera as ct
 import numpy as np
+import warnings
 
 def e_transfer_matrix(gas, element):
     """
@@ -35,24 +36,25 @@ def e_transfer_matrix(gas, element):
             
             # favour carbon atom over oxygen atom transfer
             if combinations.shape[0]-1 and  'O' in gas.element_names and 'C' in gas.element_names and (element == 'O' or element == 'C'):
-                comb_fltr = np.zeros((np.shape(combinations)[0],1), dtype=bool)
-            
-                element_2 = 'C' if element == 'O' else 'O'
+                if np.any([gas.n_atoms(reac,'O') for reac in reaction.reactants]) and np.any([gas.n_atoms(reac,'C') for reac in reaction.reactants]):
+                    comb_fltr = np.zeros((np.shape(combinations)[0]), dtype=bool)
                 
-                combinations_2  = generate_valid_combinations(reaction, element_2, gas)[0]
-            
-                for i in range(np.shape(combinations)[0]):
-                    for j in range(np.shape(combinations_2)[0]):
-                        if element == 'O':
-                            if ((combinations_2[j] >= combinations[i]) & (combinations[i] > 0)).any():
-                                comb_fltr[i] = True        
-                        
-                        else:
-                            if ((combinations[i] >= combinations_2[j]) & (combinations_2[j] > 0)).any():
-                                comb_fltr[i] = True        
+                    element_2 = 'C' if element == 'O' else 'O'
                     
-                combinations = combinations[comb_fltr]    
-            
+                    combinations_2  = generate_valid_combinations(reaction, element_2, gas)[0]
+                
+                    for i in range(np.shape(combinations)[0]):
+                        for j in range(np.shape(combinations_2)[0]):
+                            if element == 'O':
+                                if ((combinations_2[j] >= combinations[i]) & (combinations[i] > 0)).any():
+                                    comb_fltr[i] = True        
+                            
+                            else:
+                                if ((combinations[i] >= combinations_2[j]) & (combinations_2[j] > 0)).any():
+                                    comb_fltr[i] = True        
+                        
+                    combinations = combinations[comb_fltr]    
+                
             # minimize change in molar mass
             if combinations.shape[0]-1:
                 combinations = combinations[(np.multiply(combinations,dlt_W).sum(axis = 1).min() == np.multiply(combinations,dlt_W).sum(axis = 1))]
@@ -63,8 +65,10 @@ def e_transfer_matrix(gas, element):
     
          
             if combinations.shape[0]-1:
-            #****Output warning
-                combinations = combinations[0]
+                comb_fltr = np.zeros((np.shape(combinations)[0]), dtype=bool)
+                comb_fltr[0] = True
+                combinations = combinations[comb_fltr]
+                warnings.warn("Script could not find a unique distribution of " + element + " for reaction " + str(reaction) + ".\n First distribution selected : " + str(combinations))
             
             
             ic = 0
