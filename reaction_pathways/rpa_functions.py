@@ -4,9 +4,10 @@ from itertools import product
 import graphviz
 import cantera as ct
 import numpy as np
-from scipy.interpolate import simpson
+from scipy.integrate import simpson
 # Imported from this module
-from utils import format_value
+from .utils import format_value
+from .element_transfert import e_transfer_matrix
 
 def compute_reaction_graph(flame, element):
     """
@@ -16,6 +17,7 @@ def compute_reaction_graph(flame, element):
     # What does this do ?
     ix_in = 0
     ix_out = len(flame.grid)
+    gas = flame.gas
     
     # Get the names of species containing element
     species = [sp.name for sp in gas.species() if gas.n_atoms(sp.name, element)]
@@ -68,7 +70,6 @@ def compute_reaction_graph(flame, element):
 
     species.append('influx')
     species.append('outflux')
-    
     
     # Put rates in new forward (positive) direction
     graph = graph - graph.T
