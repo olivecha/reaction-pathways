@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import unittest
-from rpa_module.utils import format_value
+from reaction_pathways.utils import format_value
 
 
 class TestUtilities(unittest.TestCase):

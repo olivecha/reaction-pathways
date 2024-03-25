@@ -4,7 +4,7 @@ import unittest
 import pickle
 import numpy as np
 import cantera as ct
-import rpa_module.element_transfert as transfert
+import reaction_pathways.element_transfert as transfert
 
 CT_MECHS = os.path.join(os.path.dirname(__file__), "test_assets", "mechs")
 REF_FILES = os.path.join(os.path.dirname(__file__), "test_assets", "transfert")
